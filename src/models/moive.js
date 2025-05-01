@@ -5,6 +5,7 @@ const movieSchema = new mongoose.Schema({
   description: String,
   price: Number,
   image: String,
+  bookedSeats: [],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

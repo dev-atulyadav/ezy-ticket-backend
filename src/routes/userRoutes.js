@@ -5,9 +5,12 @@ import {
   validateUserLogin,
 } from "../utils/dataValidation.js";
 import bcrypt from "bcryptjs";
+import Ticket from "../models/ticket.js";
+import Movie from "../models/moive.js";
 
 const userRoutes = express.Router();
 
+//Register user
 userRoutes.post("/register", async (req, res) => {
   try {
     const { name, email, password } = validateUserData(req.body);
@@ -48,6 +51,7 @@ userRoutes.post("/register", async (req, res) => {
   }
 });
 
+//Login user
 userRoutes.post("/login", async (req, res) => {
   try {
     const { email, password } = validateUserLogin(req.body);
@@ -78,6 +82,7 @@ userRoutes.post("/login", async (req, res) => {
   }
 });
 
+//Logout user
 userRoutes.get("/logout", (req, res) => {
   res.clearCookie("token");
   res.json({
@@ -86,13 +91,59 @@ userRoutes.get("/logout", (req, res) => {
   });
 });
 
-userRoutes.get("/book-ticket", async (req, res) => {
-  const { ticketId, movieId, userId } = req.body;
-  console.log(ticketId, movieId, userId);
-  res.json({
-    status: 200,
-    message: "Book ticket successfully!",
-  });
+//Book ticket
+userRoutes.post("/book-ticket", async (req, res) => {
+  try {
+    const { seats, movie, userId } = req.body;
+    console.log(seats, movie, userId);
+    if (!seats || !movie || !userId) {
+      return res.json({
+        status: 400,
+        message: "All fields are required",
+      });
+    }
+    const exsistingMovie = await Movie.findOne({ movieId: movie.id });
+    if (!exsistingMovie) {
+      const newMovie = await Movie.create({
+        title: movie.title,
+        description: movie.description,
+        price: movie.price,
+        image: movie.image,
+        bookedSeats: seats,
+      });
+      const ticket = await Ticket.create({
+        seats: seats,
+        movieId: newMovie._id,
+        userId: userId,
+        totalAmount: 200,
+        paymentMethod: "online",
+      });
+      return res.json({
+        status: 200,
+        message: "Book ticket successfully!",
+        data: ticket,
+      });
+    }
+
+    if (exsistingMovie.bookedSeats.some((seat) => seats.includes(seat))) {
+      return res.json({
+        status: 400,
+        message: "Seat already booked!",
+      });
+    }
+    exsistingMovie.bookedSeats.push(...seats);
+    await exsistingMovie.save();
+    res.json({
+      status: 200,
+      message: "Book ticket successfully!",
+      data: exsistingMovie,
+    });
+  } catch (error) {
+    res.json({
+      status: 500,
+      message: "Internal server error",
+    });
+  }
 });
 
 export default userRoutes;

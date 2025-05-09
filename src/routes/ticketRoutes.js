@@ -47,29 +47,27 @@ ticketRoutes.put("/update-payment-status", async (req, res) => {
 ticketRoutes.get("/get-tickets", async (req, res) => {
   try {
     const { userId } = req.body;
-    const tickets = Ticket.findOne({
-      userId,
+    const tickets = await Ticket.find();
+    const filteredTickets = tickets.filter((ticket) => {
+      return ticket.userId === userId;
     });
-    console.log(tickets);
-
-    if (tickets) {
+    if (filteredTickets.length > 0) {
       return res.json({
         status: 200,
-        message: "All tickets fetched successfully!",
-        data: tickets,
+        message: "User tickets fetched successfully!",
+        data: filteredTickets,
       });
     } else {
       return res.json({
         status: 404,
-        message: "No user found!",
+        message: "No tickets found!",
         data: null,
       });
     }
   } catch (error) {
-    console.log(error);
     return res.json({
       status: 500,
-      message: "Internal Server error!",
+      message: "Internal Server Error!",
       data: null,
     });
   }

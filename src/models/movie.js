@@ -8,6 +8,7 @@ const movieSchema = new mongoose.Schema({
   bookedSeats: [],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  movieId: String,
 });
 
 const Movie = mongoose.model("Movie", movieSchema);

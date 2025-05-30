@@ -1,6 +1,7 @@
 import express from "express";
 import Ticket from "../models/ticket.js";
 import User from "../models/user.js";
+import Movie from "../models/movie.js";
 
 const ticketRoutes = express.Router();
 
@@ -44,28 +45,42 @@ ticketRoutes.put("/update-payment-status", async (req, res) => {
 });
 
 // get User ticket
-ticketRoutes.get("/get-tickets", async (req, res) => {
+ticketRoutes.get("/get-tickets/:userId", async (req, res) => {
   try {
-    const { userId } = req.body;
-    const tickets = await Ticket.find();
-    const filteredTickets = tickets.filter((ticket) => {
-      return ticket.userId === userId;
+    const { userId } = req.params;
+    const tickets = await Ticket.find({ userId });
+    const movieIds = tickets.map((ticket) => ticket.movieId);
+    const movies = await Movie.find({ _id: { $in: movieIds } });
+    return res.json({
+      status: 200,
+      message: "User tickets fetched successfully!",
+      data: {
+        tickets,
+        movies,
+      },
     });
-    if (filteredTickets.length > 0) {
-      return res.json({
-        status: 200,
-        message: "User tickets fetched successfully!",
-        data: filteredTickets,
-      });
-    } else {
-      return res.json({
-        status: 404,
-        message: "No tickets found!",
-        data: null,
-      });
-    }
   } catch (error) {
     return res.json({
+      status: 500,
+      message: "Internal Server Error!",
+      data: null,
+    });
+  }
+});
+
+//remove ticket by id
+ticketRoutes.delete("/remove-ticket/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Ticket.findByIdAndDelete(id);
+    const tickets = await Ticket.find();
+    res.json({
+      status: 200,
+      message: "Ticket removed successfully!",
+      data: tickets,
+    });
+  } catch (error) {
+    res.json({
       status: 500,
       message: "Internal Server Error!",
       data: null,

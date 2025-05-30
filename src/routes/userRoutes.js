@@ -6,7 +6,7 @@ import {
 } from "../utils/dataValidation.js";
 import bcrypt from "bcryptjs";
 import Ticket from "../models/ticket.js";
-import Movie from "../models/moive.js";
+import Movie from "../models/movie.js";
 
 const userRoutes = express.Router();
 
@@ -95,14 +95,15 @@ userRoutes.get("/logout", (req, res) => {
 userRoutes.post("/book-ticket", async (req, res) => {
   try {
     const { seats, movie, userId } = req.body;
-    console.log(seats, movie, userId);
+    // console.log(seats, movie, userId);
     if (!seats || !movie || !userId) {
       return res.json({
         status: 400,
         message: "All fields are required",
       });
     }
-    const exsistingMovie = await Movie.findOne({ movieId: movie.id });
+    console.log(movie);
+    const exsistingMovie = await Movie.findOne({ movieId: movie.movieId });
     if (!exsistingMovie) {
       const newMovie = await Movie.create({
         title: movie.title,
@@ -110,6 +111,7 @@ userRoutes.post("/book-ticket", async (req, res) => {
         price: movie.price,
         image: movie.image,
         bookedSeats: seats,
+        movieId: movie.movieId,
       });
       const ticket = await Ticket.create({
         seats: seats,
